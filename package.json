@@ -1,7 +1,7 @@
 {
   "name": "prusa-mcp",
   "version": "1.0.0",
-  "description": "MCP server intelligent pour PrusaSlicer — analyse mesh, recommandation de profils, slicing",
+  "description": "MCP server intelligent pour PrusaSlicer \u2014 analyse mesh, recommandation de profils, slicing",
   "type": "module",
   "bin": {
     "prusa-mcp": "./build/index.js"
@@ -9,7 +9,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node build/index.js",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "test": "npm run build && node --test \"test/*.test.js\""
   },
   "files": [
     "build"
@@ -17,11 +18,16 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",
     "yauzl-promise": "^4.0.0",
+    "yazl": "^3.3.1",
     "zod": "^3.25.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/yauzl-promise": "^4.0.1",
+    "@types/yazl": "^3.3.1",
     "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

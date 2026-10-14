@@ -2,6 +2,8 @@
 
 **Intelligent MCP Server for PrusaSlicer** — 17 tools to analyze, configure and launch your 3D prints from Claude or any MCP client.
 
+> **Fork:** adds plate layout, mesh repair, support planning with enforcer/blocker volumes, preset-based slicing, and macOS/Linux support. See [FORK.md](FORK.md) for the tools, the verified PrusaSlicer 2.9.6 CLI behavior, and test status.
+
 PrusaMCP is not a simple CLI wrapper. It's a **3D printing assistant** that analyzes your mesh, recommends optimal settings with justification, diagnoses defects, and can drive PrusaSlicer automatically.
 
 > Built with [Claude Code](https://claude.ai/claude-code).
@@ -41,6 +43,16 @@ PrusaMCP is not a simple CLI wrapper. It's a **3D printing assistant** that anal
 | `postprocess_gcode` | G-code post-processing (pause, filament change, etc.) |
 | `upload_print` | Upload to OctoPrint / Prusa Connect |
 
+### Plate Layout & Supports (fork)
+
+| Tool | Description |
+|------|-------------|
+| `arrange_plate` | Pack models on the bed, with rotations and copies, into a plate 3MF |
+| `merge_models` | Combine files into one 3MF, keeping relative positions |
+| `repair_mesh` | Fill holes, fix winding, and drop bad faces; compare PrusaSlicer `--info` before and after |
+| `plan_supports` | Overhang regions with area, height, landing surface, and a verdict |
+| `apply_supports` | Add support enforcer and blocker volumes to a copy of a 3MF |
+
 ### Feedback & Community
 
 | Tool | Description |
@@ -52,7 +64,7 @@ PrusaMCP is not a simple CLI wrapper. It's a **3D printing assistant** that anal
 ## Installation
 
 ```bash
-git clone https://github.com/Noosbai/PrusaMCP.git
+git clone https://github.com/cmagorian/PrusaMCP.git
 cd PrusaMCP
 npm install
 npm run build
@@ -82,8 +94,8 @@ Add to your MCP configuration:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `PRUSASLICER_PATH` | Path to `prusa-slicer-console.exe` | Auto-detected |
-| `PRUSASLICER_PROFILES_DIR` | PrusaSlicer profiles folder | `%APPDATA%/PrusaSlicer` |
+| `PRUSASLICER_PATH` | PrusaSlicer executable (`prusa-slicer-console.exe` on Windows, `PrusaSlicer.app/Contents/MacOS/PrusaSlicer` on macOS) | Auto-detected |
+| `PRUSASLICER_PROFILES_DIR` | PrusaSlicer profiles folder | `%APPDATA%/PrusaSlicer`, `~/Library/Application Support/PrusaSlicer`, or `~/.config/PrusaSlicer` |
 | `OCTOPRINT_URL` | Your OctoPrint instance URL | — |
 | `OCTOPRINT_API_KEY` | OctoPrint API key | — |
 
@@ -176,7 +188,7 @@ src/
 
 - **Node.js** >= 18
 - **PrusaSlicer** (optional — only needed for slice, screenshot, get_current_model)
-- **Windows** for screenshot feature (uses PrintWindow API)
+- **Windows** for the screenshot tool (uses PrintWindow API); everything else runs on Windows, macOS, and Linux
 
 ## License
 

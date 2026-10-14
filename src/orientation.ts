@@ -3,7 +3,8 @@ import type { Triangle, Vec3, StlData } from "./types.js";
 export interface OrientationResult {
   name: string;
   rotation: { axisX: number; axisY: number; axisZ: number }; // degrees
-  overhangPercent: number;
+  overhangPercent: number; // share of surface area, bed contact excluded
+  overhangArea: number;    // mm²
   supportVolume: number;   // rough estimate in mm³
   printHeight: number;     // mm — lower = faster
   bedContact: number;      // mm² — higher = better adhesion
@@ -112,7 +113,7 @@ export function suggestOrientation(stl: StlData): OrientationResult[] {
 
     // Shift to Z=0, compute overhangs/bedContact in single pass
     let bedContact = 0;
-    let overhangCount = 0;
+    let overhangArea = 0;
     let surfaceArea = 0;
     let maxZ = -Infinity;
 
@@ -128,18 +129,16 @@ export function suggestOrientation(stl: StlData): OrientationResult[] {
 
       const normal = computeNormal(t.v1, t.v2, t.v3);
 
-      // Overhang: face pointing down > 45°
-      if (normal.z < -0.707) {
-        overhangCount++;
-      }
-
-      // Bed contact: faces near Z=0 facing down
+      // Bed contact: faces near Z=0 facing down. Other faces pointing down > 45° are overhangs.
       if (t.v1.z < 0.3 && t.v2.z < 0.3 && t.v3.z < 0.3 && normal.z < -0.5) {
         bedContact += area;
+      } else if (normal.z < -0.707) {
+        overhangArea += area;
       }
     }
 
-    const overhangPercent = transformed.length > 0 ? (overhangCount / transformed.length) * 100 : 0;
+    // Area-weighted, so dense tessellation does not inflate a small curved overhang
+    const overhangPercent = surfaceArea > 0 ? (overhangArea / surfaceArea) * 100 : 0;
     const printHeight = maxZ > 0 ? maxZ : 0;
 
     // Rough support volume estimate
@@ -169,6 +168,7 @@ export function suggestOrientation(stl: StlData): OrientationResult[] {
       name: orient.name,
       rotation: orient.rotation,
       overhangPercent,
+      overhangArea,
       supportVolume,
       printHeight,
       bedContact,

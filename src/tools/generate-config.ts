@@ -4,10 +4,11 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { existsSync } from "node:fs";
 import { recommendProfile } from "../profile-engine.js";
-import { writeIniFile, writeRawIniFile, profileToIniSettings, serializeIni } from "../ini-writer.js";
+import { writeRawIniFile, profileToIniSettings, serializeIni, supportSettings } from "../ini-writer.js";
 import { parseStl } from "../stl-parser.js";
 import { analyzeMesh } from "../mesh-analyzer.js";
-import type { PrusaSlicerSettings, MeshAnalysis } from "../types.js";
+import type { MeshAnalysis } from "../types.js";
+import { pickSupportOptions, supportInputs } from "./shared-schemas.js";
 
 export function registerGenerateConfig(server: McpServer) {
   server.registerTool(
@@ -16,7 +17,8 @@ export function registerGenerateConfig(server: McpServer) {
       title: "Générer un fichier config PrusaSlicer",
       description:
         "Génère un fichier .ini compatible PrusaSlicer à partir d'une intention ou de paramètres custom. " +
-        "Le fichier peut être chargé directement avec --load dans PrusaSlicer.",
+        "Le fichier peut être chargé directement avec --load dans PrusaSlicer. " +
+        "Support options (support_material*) override the recommendation; custom_settings override everything.",
       inputSchema: {
         printer: z.string().default("Generic").describe("Nom de l'imprimante"),
         nozzle: z.number().default(0.4).describe("Diamètre de buse en mm"),
@@ -28,9 +30,11 @@ export function registerGenerateConfig(server: McpServer) {
           .record(z.string(), z.union([z.string(), z.number()]))
           .optional()
           .describe("Paramètres custom PrusaSlicer à overrider (ex: {\"layer_height\": 0.15})"),
+        ...supportInputs,
       },
     },
-    async ({ printer, nozzle, goal, material, stl_path, output_path, custom_settings }) => {
+    async (input) => {
+      const { printer, nozzle, goal, material, stl_path, output_path, custom_settings } = input;
       try {
         // Mesh analysis if STL provided
         let meshAnalysis: MeshAnalysis | undefined;
@@ -41,7 +45,7 @@ export function registerGenerateConfig(server: McpServer) {
 
         // Generate recommendation
         const profile = recommendProfile(printer, nozzle, goal, material, meshAnalysis);
-        const settings = profileToIniSettings(profile);
+        const settings = { ...profileToIniSettings(profile), ...supportSettings(pickSupportOptions(input)) };
 
         // Apply custom overrides (preserve MVS if not explicitly set)
         if (custom_settings) {
@@ -77,7 +81,7 @@ export function registerGenerateConfig(server: McpServer) {
           "",
           `Usage PrusaSlicer CLI :`,
           "```",
-          `prusa-slicer-console.exe --load "${finalPath}" --export-gcode model.stl`,
+          `prusa-slicer --load "${finalPath}" --export-gcode model.stl`,
           "```",
         ];
 

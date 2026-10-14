@@ -116,6 +116,27 @@ export function profileToIniSettings(profile: RecommendedProfile): PrusaSlicerSe
   return result;
 }
 
+export interface SupportOptions {
+  support_material?: boolean;
+  support_material_auto?: boolean;
+  support_material_style?: "grid" | "snug" | "organic";
+  support_material_threshold?: number;
+  support_material_buildplate_only?: boolean;
+  support_material_contact_distance?: number;
+}
+
+/**
+ * PrusaSlicer support keys for the options that are set. Booleans become 0/1.
+ */
+export function supportSettings(options: SupportOptions): PrusaSlicerSettings {
+  const out: PrusaSlicerSettings = {};
+  for (const [key, value] of Object.entries(options)) {
+    if (value === undefined) continue;
+    out[key] = typeof value === "boolean" ? (value ? 1 : 0) : value;
+  }
+  return out;
+}
+
 /**
  * Serialize settings to PrusaSlicer .ini format.
  */

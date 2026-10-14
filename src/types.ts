@@ -20,6 +20,18 @@ export interface StlData {
   name: string;
 }
 
+// ─── Indexed Mesh ────────────────────────────────────────────
+
+export type Face = [number, number, number];
+
+export interface Mesh {
+  vertices: Vec3[];
+  faces: Face[];
+
+  // Raw extra <triangle> attributes from a 3MF (paint, MMU segmentation), kept per face
+  faceAttrs?: (string | undefined)[];
+}
+
 // ─── Mesh Analysis ───────────────────────────────────────────
 
 export interface BoundingBox {
@@ -119,12 +131,15 @@ export interface PrusaSlicerSettings {
 export interface PrusaConfig {
   executablePath: string;
   profilesDir: string;
+  version?: string;
 }
 
 export interface CliResult {
   exitCode: number;
   stdout: string;
   stderr: string;
+  signal?: string;   // set when PrusaSlicer crashed
+  timedOut?: boolean;
 }
 
 export interface GCodeStats {
@@ -134,4 +149,6 @@ export interface GCodeStats {
   filamentUsedG?: number;
   filamentCost?: number;
   layerCount?: number;
+  supportFilamentMm?: number;
+  supportLayers?: number;
 }

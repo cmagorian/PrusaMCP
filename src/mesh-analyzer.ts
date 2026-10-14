@@ -47,13 +47,14 @@ export function analyzeMesh(stl: StlData): MeshAnalysis {
     surfaceArea += area;
     areas[i] = area;
 
-    // Overhang detection: face normal Z component < cos(45°) ≈ -0.707
-    // If the normal points downward (nz < 0) beyond 45°, it's an overhang.
-    // We compute the actual normal from vertices for accuracy.
-    const normal = computeNormal(t.v1, t.v2, t.v3);
-    if (normal.z < -0.707) {
-      overhangCount++;
-    }
+  }
+
+  // Overhang: normal points down more than 45° (nz < -0.707). Faces resting on the bed are not overhangs.
+  const bedLimit = bbMin.z + 0.05;
+  for (let i = 0; i < n; i++) {
+    const t = triangles[i];
+    if (Math.max(t.v1.z, t.v2.z, t.v3.z) <= bedLimit) continue;
+    if (computeNormal(t.v1, t.v2, t.v3).z < -0.707) overhangCount++;
   }
 
   // Small detail detection: triangles with area < 10% of median area

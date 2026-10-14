@@ -40,7 +40,7 @@ export function registerSuggestOrientation(server: McpServer) {
           const medal = i === 0 ? " **RECOMMANDÉ**" : "";
           lines.push(`### ${i + 1}. ${r.name}${medal}`);
           lines.push(`- **Score** : ${r.score}/100`);
-          lines.push(`- **Overhangs** : ${r.overhangPercent.toFixed(1)}%`);
+          lines.push(`- **Overhangs** : ${r.overhangPercent.toFixed(1)}% (${r.overhangArea.toFixed(0)}mm²)`);
           lines.push(`- **Hauteur** : ${r.printHeight.toFixed(1)}mm`);
           lines.push(`- **Contact plateau** : ${r.bedContact.toFixed(1)}mm²`);
           lines.push(`- **Supports estimés** : ${r.supportVolume.toFixed(0)}mm³`);

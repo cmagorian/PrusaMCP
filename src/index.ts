@@ -20,6 +20,11 @@ import { registerSearchFilament } from "./tools/search-filament.js";
 import { registerPrintWizard } from "./tools/print-wizard.js";
 import { registerSubmitFeedback, registerFeedbackStats, registerExportFeedback } from "./tools/feedback.js";
 import { registerDiagnosePrint } from "./tools/diagnose-print.js";
+import { registerArrangePlate } from "./tools/arrange-plate.js";
+import { registerMergeModels } from "./tools/merge-models.js";
+import { registerRepairMesh } from "./tools/repair-mesh.js";
+import { registerPlanSupports } from "./tools/plan-supports.js";
+import { registerApplySupports } from "./tools/apply-supports.js";
 
 async function main() {
   console.error("PrusaMCP v2.1.0 — MCP Server intelligent pour PrusaSlicer");
@@ -27,7 +32,7 @@ async function main() {
   const config = loadConfig();
 
   if (config.executablePath) {
-    console.error(`PrusaSlicer : ${config.executablePath}`);
+    console.error(`PrusaSlicer ${config.version ?? ""} : ${config.executablePath}`);
   }
   if (config.profilesDir) {
     console.error(`Profils : ${config.profilesDir}`);
@@ -54,14 +59,25 @@ async function main() {
   registerFeedbackStats(server);
   registerExportFeedback(server);
 
+  // Plate layout & supports
+  registerArrangePlate(server, config);
+  registerMergeModels(server, config);
+  registerRepairMesh(server, config);
+  registerPlanSupports(server);
+  registerApplySupports(server);
+
   // PrusaSlicer integration
   registerSlice(server, config);
   registerGetCurrentModel(server, config);
-  registerScreenshotPrusaSlicer(server);
   registerPostprocessGcode(server);
   registerUploadPrint(server);
 
-  console.error("17 tools enregistrés. PrusaMCP v2.1.0 ready.");
+  // Window capture uses the Win32 PrintWindow API
+  if (process.platform === "win32") {
+    registerScreenshotPrusaSlicer(server);
+  }
+
+  console.error("PrusaMCP ready.");
 
   const transport = new StdioServerTransport();
   await server.connect(transport);

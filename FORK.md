@@ -74,14 +74,29 @@ Each row was checked on this machine.
 | 3MF with an enforcer loads as an enforcer | Done through the CLI: round trip keeps the type, slicing honors it |
 | MMU tool assignments survive | Done on a PrusaSlicer-format two-extruder 3MF: identical T0/T1 changes before and after `apply_supports` |
 | Suite on Windows and Linux | CI runs unit tests on Ubuntu, Windows, and macOS; PrusaSlicer tests run only where it is installed |
-| Five models, CLI filament vs GUI slice | Manual, not done |
-| Enforcer volume visible in the GUI | Manual, not done |
-| GUI-built MMU3 3MF | Manual, not done; the MMU3 presets are not installed on the test machine |
+| Five models, CLI filament vs GUI slice | Done: 5 of 5 match in filament and time, none differ by 1% (table below) |
+| Enforcer volume visible in the GUI | Done: the object list shows `enforcer R1` under `tshape.stl`, sized 19 × 14 × 4 mm at 112.5, 105, 20 mm over the left wing |
+| GUI-built MMU3 3MF | Not run: the GUI printer list holds only MK3S & MK3S+, so no MMU3 printer or filament is installed |
+
+### Filament parity, CLI vs GUI
+
+PrusaSlicer 2.9.6 GUI and `slice_prusaslicer` with `use_gui_presets`, both on Original Prusa i3 MK3S & MK3S+ / 0.15mm QUALITY @MK3 / Prusament ASA, no support overrides. Each 3MF came from `arrange_plate`. GUI values come from the G-code the GUI exported, because the Sliced Info panel rounds time to the minute.
+
+| Model | Filament CLI | Filament GUI | Time CLI | Time GUI | G-code move lines |
+| --- | --- | --- | --- | --- | --- |
+| T-shape (flat overhang) | 2.32 g, 899.85 mm | 2.32 g, 899.85 mm | 30m 22s | 30m 22s | 16401, identical |
+| Arch | 4.13 g, 1604.56 mm | 4.13 g, 1604.56 mm | 57m 33s | 57m 33s | 32797, identical |
+| Sphere (organic) | 1.88 g, 728.73 mm | 1.88 g, 728.73 mm | 32m 24s | 32m 24s | 42878, identical |
+| Ledge (cosmetic face) | 6.07 g, 2358.56 mm | 6.07 g, 2358.56 mm | 59m 24s | 59m 24s | 38618, identical |
+| Three-model plate | 7.26 g, 2820.64 mm | 7.26 g, 2820.64 mm | 1h 6m 16s | 1h 6m 16s | 85998, shifted (see Limits) |
+
+The enforcer check used `arrange_plate` with `allow_rotation: false` and `apply_supports` with `enforce: [1]`. The default `arrange_plate` turns the T-shape 90°, which makes region 1 the front wing.
 
 ## Limits
 
 - The packer packs bounding rectangles, so it nests less tightly than PrusaSlicer's polygon arrange.
 - Every real CLI crash raises a macOS "quit unexpectedly" dialog. The tests never crash PrusaSlicer on purpose; crash handling is tested with a fake executable.
+- The PrusaSlicer GUI opens a multi-object 3MF without an embedded print config as a non-project file and recenters the group on the bed. The three-model plate sat 2 mm left (X) and 2 mm toward the back (Y) of where the CLI sliced it. Relative layout, time, and filament are unchanged.
 - Support volumes are axis-aligned boxes and can cover neighboring overhangs. `plan_supports` lists those overlaps.
 - `arrange_plate` and `merge_models` keep geometry, paint, and per-object and per-volume settings, but drop a source 3MF's embedded print config. `apply_supports` and `repair_mesh` keep it.
 - Cosmetic faces are named by side or by a bed-coordinate box.
